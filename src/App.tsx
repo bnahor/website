@@ -5,7 +5,7 @@ import { profile } from './data/profile';
 import { useEffect, useState } from 'react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PlaneNoiseBackground } from './components/PlaneNoiseBackground';
-import { ProjectsTimeline } from './components/ProjectsTimeline';
+import { ProjectsTile } from './components/tiles/ProjectsTile';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
 
 export default function App() {
@@ -84,7 +84,7 @@ export default function App() {
                   <ExperienceTile isExpanded={false} />
                 </div>
                 <div className="floating-content">
-                  <ProjectsTimeline />
+                  <ProjectsTile />
                 </div>
               </div>
 
@@ -99,7 +99,7 @@ export default function App() {
                   <ExperienceTile isExpanded={false} />
                 </div>
                 <div className="floating-content">
-                  <ProjectsTimeline />
+                  <ProjectsTile />
                 </div>
               </div>
 

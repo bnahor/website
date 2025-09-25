@@ -75,13 +75,13 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
     },
     {
       name: 'LinkedIn',
-      value: '@rohan',
+      value: 'rohan-bahl',
       href: profile.links.linkedin,
       icon: 'briefcase' as const,
     },
     {
       name: 'GitHub',
-      value: '@rohan',
+      value: 'RB9823',
       href: profile.links.github,
       icon: 'dev' as const,
     }
