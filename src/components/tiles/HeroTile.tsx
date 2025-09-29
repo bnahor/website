@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useIsFirstRender } from '../../hooks/useIsFirstRender';
 import { profile } from '../../data/profile';
 import { Icon } from '../Icon';
 import { MOTION } from '../../utils/motion';
@@ -13,23 +14,49 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
   const [showQuickContact, setShowQuickContact] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
+  const copyTimeoutRef = useRef<number | null>(null);
+  const resetStatusTimeoutRef = useRef<number | null>(null);
+  const submitControllerRef = useRef<AbortController | null>(null);
+  const isFirstRender = useIsFirstRender();
 
-  const handleEmailClick = async () => {
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      if (resetStatusTimeoutRef.current) {
+        window.clearTimeout(resetStatusTimeoutRef.current);
+      }
+      submitControllerRef.current?.abort();
+    };
+  }, []);
+
+  const handleEmailClick = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(profile.email);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
     } catch {
       window.location.href = `mailto:${profile.email}`;
     }
-  };
+  }, []);
 
-  const handleQuickContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const toggleQuickContact = useCallback(() => {
+    setShowQuickContact((prev) => !prev);
+  }, []);
+
+  const handleQuickContactSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     const formData = new FormData(e.currentTarget);
+    submitControllerRef.current?.abort();
+    const controller = new AbortController();
+    submitControllerRef.current = controller;
     
     try {
       const response = await fetch('https://formspree.io/f/myzdbgal', {
@@ -37,74 +64,79 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
         body: formData,
         headers: {
           'Accept': 'application/json'
-        }
+        },
+        signal: controller.signal
       });
 
       if (response.ok) {
         setSubmitStatus('success');
         (e.target as HTMLFormElement).reset();
-        setTimeout(() => {
+        if (resetStatusTimeoutRef.current) {
+          window.clearTimeout(resetStatusTimeoutRef.current);
+        }
+        resetStatusTimeoutRef.current = window.setTimeout(() => {
           setShowQuickContact(false);
           setSubmitStatus(null);
         }, 3000);
       } else {
         setSubmitStatus('error');
       }
-    } catch {
+    } catch (error) {
+      if ((error as DOMException).name === 'AbortError') {
+        return;
+      }
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
+      submitControllerRef.current = null;
     }
-  };
+  }, []);
 
-  const contactMethods = [
-    {
-      name: 'Quick Message',
-      value: 'Send a message directly',
-      icon: 'email' as const,
-      action: () => setShowQuickContact(!showQuickContact),
-      copyable: false
-    },
-    {
-      name: 'Email',
-      value: profile.email,
-      href: `mailto:${profile.email}`,
-      icon: 'email' as const,
-      action: handleEmailClick,
-      copyable: true
-    },
-    {
-      name: 'LinkedIn',
-      value: 'rohan-bahl',
-      href: profile.links.linkedin,
-      icon: 'briefcase' as const,
-    },
-    {
-      name: 'GitHub',
-      value: 'RB9823',
-      href: profile.links.github,
-      icon: 'dev' as const,
-    }
-  ];
+  const contactMethods = useMemo(
+    () => [
+      {
+        name: 'Quick Message',
+        value: 'Send a message directly',
+        icon: 'email' as const,
+        action: toggleQuickContact,
+        copyable: false
+      },
+      {
+        name: 'Email',
+        value: profile.email,
+        href: `mailto:${profile.email}`,
+        icon: 'email' as const,
+        action: handleEmailClick,
+        copyable: true
+      },
+      {
+        name: 'LinkedIn',
+        value: 'rohan-bahl',
+        href: profile.links.linkedin,
+        icon: 'briefcase' as const,
+      },
+      {
+        name: 'GitHub',
+        value: 'RB9823',
+        href: profile.links.github,
+        icon: 'dev' as const,
+      }
+    ],
+    [handleEmailClick, toggleQuickContact]
+  );
 
   return (
     <div className="flex flex-col justify-between min-h-[400px] p-4 md:p-6">
       <div className="flex-shrink-0">
         <motion.h1 
           className="text-2xl md:text-3xl lg:text-4xl font-bold text-text-primary mb-2"
-          animate={{ 
-            fontSize: isExpanded ? '3rem' : undefined 
-          }}
-          transition={{ duration: 0.3 }}
+          animate={isExpanded ? { fontSize: '3rem' } : undefined}
         >
           {profile.name}
         </motion.h1>
         <motion.p 
           className="text-text-muted leading-[1.75]"
-          animate={{ 
-            fontSize: isExpanded ? '1.125rem' : '1rem' 
-          }}
-          transition={{ duration: 0.3 }}
+          animate={isExpanded ? { fontSize: '1.125rem' } : undefined}
         >
           {profile.valueProp}
         </motion.p>
@@ -117,8 +149,8 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
             <motion.div
               key={method.name}
               custom={index}
-              initial={false}
-              animate="show"
+              initial={isFirstRender ? false : 'hidden'}
+              animate={isFirstRender ? undefined : 'show'}
               variants={MOTION.listItem}
               className="group"
             >
