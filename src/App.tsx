@@ -3,7 +3,7 @@ import type { JSX, ReactNode } from 'react';
 import { profile } from './data/profile';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PlaneNoiseBackground } from './components/PlaneNoiseBackground';
-import { TileSkeleton } from './components/tiles/TileSkeleton';
+import { DelayedTileFallback } from './components/tiles/DelayedTileFallback';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
 
 const createPrefetch = (loader: () => Promise<unknown>) => {
@@ -58,7 +58,7 @@ function TileSlot({ children, prefetch }: { children: ReactNode; prefetch?: () =
       onFocus={handleIntent}
       onTouchStart={handleIntent}
     >
-      <Suspense fallback={<TileSkeleton />}>{children}</Suspense>
+      <Suspense fallback={<DelayedTileFallback delayMs={120} />}>{children}</Suspense>
     </div>
   );
 }
