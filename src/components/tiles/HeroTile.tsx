@@ -113,13 +113,9 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
       <div className="flex-1 py-6">
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-text-primary mb-4">Let's Connect</h3>
-          {contactMethods.map((method, index) => (
-            <motion.div
+          {contactMethods.map((method) => (
+            <div
               key={method.name}
-              custom={index}
-              initial={false}
-              animate="show"
-              variants={MOTION.listItem}
               className="group"
             >
               <motion.button
@@ -277,7 +273,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
           ))}
           
           <div className="flex items-center gap-2 text-sm mt-4 pt-2 border-t border-white/10">
