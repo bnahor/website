@@ -1,40 +1,29 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { projects } from '../../data/projects';
 import { MOTION } from '../../utils/motion';
 import { Icon } from '../Icon';
-import { useIsFirstRender } from '../../hooks/useIsFirstRender';
 
 type ProjectsTab = 'featured' | 'all';
 
 export function ProjectsTile() {
   const [activeTab, setActiveTab] = useState<ProjectsTab>('featured');
-  const isInitialRender = useIsFirstRender();
-  const tabs = useMemo(
-    () => [
-      {
-        id: 'featured',
-        label: 'Highlights',
-        description: 'Selected standout builds'
-      },
-      {
-        id: 'all',
-        label: 'All Projects',
-        description: `${projects.length} shipped initiatives`
-      }
-    ],
-    [projects.length]
-  );
+  const tabs: { id: ProjectsTab; label: string; description: string }[] = [
+    {
+      id: 'featured',
+      label: 'Highlights',
+      description: 'Selected standout builds'
+    },
+    {
+      id: 'all',
+      label: 'All Projects',
+      description: `${projects.length} shipped initiatives`
+    }
+  ];
 
-  const featuredProjects = useMemo(
-    () => projects.filter((p) => p.featured).slice(0, 3),
-    [projects]
-  );
+  const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
   const isAll = activeTab === 'all';
-  const displayProjects = useMemo(
-    () => (isAll ? projects : featuredProjects),
-    [featuredProjects, isAll, projects]
-  );
+  const displayProjects = isAll ? projects : featuredProjects;
 
   return (
     <div className="flex flex-col min-h-[480px] p-4 md:p-6">
@@ -66,7 +55,7 @@ export function ProjectsTile() {
             {activeTab === tab.id && (
               <motion.span
                 className="hidden text-[11px] text-brand/80 md:inline"
-                initial={isInitialRender ? false : { opacity: 0, y: 4 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, ease: [0.4, 0.0, 0.2, 1] }}
               >
@@ -79,10 +68,10 @@ export function ProjectsTile() {
 
       {/* Project grid */}
       <div className="flex-1 overflow-visible">
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={isInitialRender ? false : { opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: [0.4, 0.0, 0.2, 1] }}

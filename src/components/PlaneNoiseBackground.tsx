@@ -1,281 +1,200 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Perlin2D } from '../utils/perlin';
+import { VISUAL } from '../config/visual';
 
-const WORKER_PATH = new URL('../workers/planeNoiseWorker.ts', import.meta.url);
-
-const supportsOffscreenCanvas = () => {
-  if (typeof window === 'undefined') return false;
-  return (
-    'OffscreenCanvas' in window &&
-    typeof HTMLCanvasElement !== 'undefined' &&
-    'transferControlToOffscreen' in HTMLCanvasElement.prototype
-  );
-};
-
-const usePrefersReducedMotion = () => {
-  const [prefers, setPrefers] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefers(media.matches);
-
-    const handler = (event: MediaQueryListEvent) => setPrefers(event.matches);
-    media.addEventListener('change', handler);
-    return () => media.removeEventListener('change', handler);
-  }, []);
-
-  return prefers;
+type PDot = {
+  x: number;
+  y: number;
 };
 
 export function PlaneNoiseBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+  const pointsRef = useRef<PDot[]>([]);
+  const perlin = useRef(new Perlin2D()).current;
   const rafRef = useRef<number | null>(null);
-  const tileNodesRef = useRef<HTMLElement[]>([]);
-  const tileCentersBufferRef = useRef<Float32Array | null>(null);
-  const tileCountRef = useRef(0);
-  const isVisibleRef = useRef(false);
-  const pendingTileUpdateRef = useRef<number | null>(null);
-  const [dims, setDims] = useState(() => ({ w: 0, h: 0 }));
-
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  const hasOffscreen = useMemo(() => supportsOffscreenCanvas(), []);
-
-  const stopLoop = useCallback(() => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  const sendFrame = useCallback(
-    (timestamp: number) => {
-      const worker = workerRef.current;
-      if (!worker || !isVisibleRef.current) {
-        rafRef.current = null;
-        return;
-      }
-
-      const tileCenters = tileCentersBufferRef.current;
-      worker.postMessage({
-        type: 'frame',
-        now: timestamp,
-        tileCenters: tileCenters ?? null,
-        tileCount: tileCountRef.current,
-      });
-
-      rafRef.current = requestAnimationFrame(sendFrame);
-    },
-    []
-  );
-
-  const startLoop = useCallback(() => {
-    if (rafRef.current !== null || !workerRef.current) return;
-    rafRef.current = requestAnimationFrame(sendFrame);
-  }, [sendFrame]);
-
-  const applyTileUpdates = useCallback((buffer: ArrayBuffer) => {
-    const nodes = tileNodesRef.current;
-    if (!nodes.length) return;
-
-    const values = new Float32Array(buffer);
-    if (values.length / 4 !== nodes.length) return;
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      const base = i * 4;
-      node.style.setProperty('--caustic-noise', values[base].toFixed(3));
-      node.style.setProperty('--caustic-off-x', `${values[base + 1].toFixed(2)}px`);
-      node.style.setProperty('--caustic-off-y', `${values[base + 2].toFixed(2)}px`);
-      node.style.setProperty('--caustic-scale', values[base + 3].toFixed(3));
-    }
-  }, []);
-
-  const computeTileCenters = useCallback(() => {
-    const tiles = Array.from(
-      document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner')
-    );
-    tileNodesRef.current = tiles;
-
-    if (!tiles.length) {
-      tileCentersBufferRef.current = null;
-      tileCountRef.current = 0;
-      return;
-    }
-
-    const centers = new Float32Array(tiles.length * 2);
-    tiles.forEach((tile, index) => {
-      const rect = tile.getBoundingClientRect();
-      centers[index * 2] = rect.left + rect.width * 0.5;
-      centers[index * 2 + 1] = rect.top + rect.height * 0.5;
-    });
-
-    tileCentersBufferRef.current = centers;
-    tileCountRef.current = tiles.length;
-  }, []);
+  const tilesRef = useRef<HTMLElement[] | null>(null);
+  const tileCentersRef = useRef<Array<{ el: HTMLElement; cx: number; cy: number }>>([]);
+  const spriteRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      stopLoop();
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-    }
-  }, [prefersReducedMotion, stopLoop]);
+    const rebuild = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setDims({ w, h });
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const updateDims = () => {
-      setDims({ w: window.innerWidth, h: window.innerHeight });
-    };
-
-    updateDims();
-    const handleResize = () => {
-      requestAnimationFrame(updateDims);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    computeTileCenters();
-    const deferred = window.setTimeout(() => computeTileCenters(), 250);
-
-    const handleScrollOrResize = () => {
-      if (pendingTileUpdateRef.current !== null) return;
-      pendingTileUpdateRef.current = requestAnimationFrame(() => {
-        pendingTileUpdateRef.current = null;
-        computeTileCenters();
-      });
-    };
-
-    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
-    window.addEventListener('resize', handleScrollOrResize, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleScrollOrResize);
-      window.removeEventListener('resize', handleScrollOrResize);
-      if (pendingTileUpdateRef.current !== null) {
-        cancelAnimationFrame(pendingTileUpdateRef.current);
-        pendingTileUpdateRef.current = null;
-      }
-      window.clearTimeout(deferred);
-    };
-  }, [computeTileCenters]);
-
-  useEffect(() => {
-    if (!hasOffscreen || prefersReducedMotion) return;
-    if (!canvasRef.current) return;
-    if (dims.w === 0 || dims.h === 0) return;
-    if (workerRef.current) return;
-
-    const worker = new Worker(WORKER_PATH, { type: 'module' });
-    const canvasEl = canvasRef.current;
-    const offscreen = canvasEl.transferControlToOffscreen();
-    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
-
-    worker.postMessage(
-      {
-        type: 'init',
-        canvas: offscreen,
-        width: dims.w,
-        height: dims.h,
-        dpr,
-      },
-      [offscreen]
-    );
-
-    const handleMessage = (event: MessageEvent<{ type: string; updates?: ArrayBuffer }>) => {
-      if (event.data.type === 'tileUpdate' && event.data.updates) {
-        applyTileUpdates(event.data.updates);
-      }
-    };
-
-    worker.addEventListener('message', handleMessage);
-
-    workerRef.current = worker;
-
-    if (isVisibleRef.current) {
-      worker.postMessage({ type: 'resume' });
-      startLoop();
-    } else {
-      worker.postMessage({ type: 'pause' });
-    }
-
-    return () => {
-      worker.removeEventListener('message', handleMessage);
-      worker.terminate();
-      workerRef.current = null;
-    };
-  }, [applyTileUpdates, dims.h, dims.w, hasOffscreen, prefersReducedMotion, startLoop]);
-
-  useEffect(() => {
-    const worker = workerRef.current;
-    if (!worker) return;
-    if (dims.w === 0 || dims.h === 0) return;
-
-    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
-    worker.postMessage({ type: 'resize', width: dims.w, height: dims.h, dpr });
-  }, [dims]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || prefersReducedMotion) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        const isVisible = entry.isIntersecting;
-        isVisibleRef.current = isVisible;
-
-        const worker = workerRef.current;
-        if (worker) {
-          worker.postMessage({ type: isVisible ? 'resume' : 'pause' });
-          if (isVisible) {
-            startLoop();
-          } else {
-            stopLoop();
-          }
-        } else if (!isVisible) {
-          stopLoop();
+      const spacing = VISUAL.PLANE_GRID_SPACING_PX;
+      const cols = Math.ceil(w / spacing) + 2;
+      const rows = Math.ceil(h / spacing) + 2;
+      const pts: PDot[] = [];
+      for (let i = -1; i < cols; i++) {
+        for (let j = -1; j < rows; j++) {
+          pts.push({ x: i * spacing, y: j * spacing });
         }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(canvas);
-    return () => observer.disconnect();
-  }, [prefersReducedMotion, startLoop, stopLoop]);
-
-  useEffect(() => () => stopLoop(), [stopLoop]);
+      }
+      pointsRef.current = pts;
+    };
+    rebuild();
+    const onResize = () => requestAnimationFrame(rebuild);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
-    if (hasOffscreen || prefersReducedMotion) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const drawStatic = () => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+
+    const ensureSize = () => {
       const { w, h } = dims;
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    ensureSize();
 
-      const gradient = ctx.createLinearGradient(0, 0, 0, h);
-      gradient.addColorStop(0, 'rgba(118, 208, 255, 0.1)');
-      gradient.addColorStop(1, 'rgba(118, 208, 255, 0)');
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, w, h);
+    const buildSprite = () => {
+      const sz = 64;
+      const sprite = document.createElement('canvas');
+      sprite.width = sz; sprite.height = sz;
+      const sctx = sprite.getContext('2d');
+      if (sctx) {
+        const g = sctx.createRadialGradient(sz/2, sz/2, 0, sz/2, sz/2, sz/2);
+        g.addColorStop(0, 'rgba(255,255,255,1)');
+        g.addColorStop(0.5, 'rgba(118,208,255,0.7)');
+        g.addColorStop(1, 'rgba(118,208,255,0)');
+        sctx.fillStyle = g;
+        sctx.beginPath();
+        sctx.arc(sz/2, sz/2, sz/2, 0, Math.PI * 2);
+        sctx.fill();
+      }
+      spriteRef.current = sprite;
+    };
+    if (!spriteRef.current) buildSprite();
+
+    const refreshTileNodes = () => {
+      tilesRef.current = Array.from(document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner'));
+      computeTileCenters();
     };
 
-    drawStatic();
-  }, [dims, hasOffscreen, prefersReducedMotion]);
+    const computeTileCenters = () => {
+      const arr: Array<{ el: HTMLElement; cx: number; cy: number }> = [];
+      if (!tilesRef.current) return;
+      for (const el of tilesRef.current) {
+        const r = el.getBoundingClientRect();
+        arr.push({ el, cx: r.left + r.width * 0.5, cy: r.top + r.height * 0.5 });
+      }
+      tileCentersRef.current = arr;
+    };
+    refreshTileNodes();
+    let scrollRaf: number | null = null;
+    const onScrollOrResize = () => {
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = null;
+        computeTileCenters();
+      });
+    };
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', () => { ensureSize(); refreshTileNodes(); }, { passive: true });
+
+    let start = performance.now();
+
+    const step = (now: number) => {
+      const { w, h } = dims;
+      if (w === 0 || h === 0) {
+        rafRef.current = requestAnimationFrame(step);
+        return;
+      }
+      const t = (now - start) / 1000;
+      ctx.clearRect(0, 0, w, h);
+
+      const f1 = VISUAL.PLANE_NOISE_FREQ1;
+      const f2 = VISUAL.PLANE_NOISE_FREQ2;
+      const s1 = VISUAL.PLANE_NOISE_SPEED1;
+      const s2 = VISUAL.PLANE_NOISE_SPEED2;
+      const yAmp = VISUAL.PLANE_HEIGHT_AMP_PX;
+      const lumaMin = VISUAL.PLANE_LUMA_MIN;
+      const lumaMax = VISUAL.PLANE_LUMA_MAX;
+      const sizePersp = VISUAL.PLANE_SIZE_PERSPECTIVE;
+
+      for (const p of pointsRef.current) {
+        const n1 = perlin.noise(p.x * f1, p.y * f1 + t * s1);
+        const n2 = perlin.noise((p.x + 1000) * f2, (p.y - 500) * f2 + t * s2);
+        const hval = Math.max(0, Math.min(1, 0.5 + 0.5 * ((n1 + 0.6 * n2) / 1.6)));
+        const yOffset = (hval - 0.5) * 2 * yAmp;
+        const persp = lumaMin + (lumaMax - lumaMin) * Math.min(1, Math.max(0, p.y / h));
+        const size = (VISUAL.DOT_BASE_SIZE + hval * VISUAL.DOT_SIZE_RANGE) * (1 + sizePersp * (persp - 1));
+        const alpha = (VISUAL.DOT_ALPHA_BASE + hval * VISUAL.DOT_ALPHA_RANGE) * persp;
+
+        const x = p.x;
+        const y = p.y + yOffset;
+
+        const sprite = spriteRef.current;
+        if (sprite) {
+          ctx.globalAlpha = alpha;
+          const d = size * 2;
+          ctx.drawImage(sprite, x - size, y - size, d, d);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      if (!tilesRef.current || tilesRef.current.length === 0) {
+        tilesRef.current = Array.from(document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner'));
+        computeTileCenters();
+      }
+      const offMax = VISUAL.CAUSTIC_OFFSET_MAX_PX;
+      const scaleBase = VISUAL.CAUSTIC_SCALE_BASE;
+      const scaleRange = VISUAL.CAUSTIC_SCALE_RANGE;
+      for (const entry of tileCentersRef.current) {
+        const node = entry.el;
+        const cx = entry.cx;
+        const cy = entry.cy;
+
+        const m = perlin.noise(cx * f1, cy * f1 + t * s1);
+        const m2 = perlin.noise((cx + 200) * f2, (cy - 200) * f2 + t * s2);
+        const val = Math.max(0, Math.min(1, 0.5 + 0.5 * ((m + 0.6 * m2) / 1.6)));
+        node.style.setProperty('--caustic-noise', val.toFixed(3));
+
+        const dx = 8; const dy = 8;
+        const f = (x: number, y: number) => {
+          const a = perlin.noise(x * f1, y * f1 + t * s1);
+          const b = perlin.noise((x + 200) * f2, (y - 200) * f2 + t * s2);
+          return (a + 0.6 * b) / 1.6;
+        };
+        const df_dx = (f(cx + dx, cy) - f(cx - dx, cy)) / (2 * dx);
+        const df_dy = (f(cx, cy + dy) - f(cx, cy - dy)) / (2 * dy);
+
+        let vx = -df_dx;
+        let vy = -df_dy;
+        const mag = Math.hypot(vx, vy) || 1;
+        vx /= mag; vy /= mag;
+        const strength = Math.min(1, Math.max(0, Math.hypot(df_dx, df_dy) * 120));
+        const offX = (vx * strength * offMax).toFixed(2);
+        const offY = (vy * strength * offMax).toFixed(2);
+        node.style.setProperty('--caustic-off-x', `${offX}px`);
+        node.style.setProperty('--caustic-off-y', `${offY}px`);
+        const scl = (scaleBase + scaleRange * val).toFixed(3);
+        node.style.setProperty('--caustic-scale', scl);
+      }
+
+      if (!prefersReduced) rafRef.current = requestAnimationFrame(step);
+    };
+
+    if (!prefersReduced) rafRef.current = requestAnimationFrame(step);
+    else step(performance.now());
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      window.removeEventListener('scroll', onScrollOrResize as any);
+    };
+  }, [dims, perlin]);
 
   return (
     <canvas

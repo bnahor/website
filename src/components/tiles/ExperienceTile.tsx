@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { experience } from '../../data/experience';
 import { Icon } from '../Icon';
 import { MOTION } from '../../utils/motion';
-import { useIsFirstRender } from '../../hooks/useIsFirstRender';
 
 interface ExperienceTileProps {
   isExpanded: boolean;
@@ -13,27 +12,21 @@ type ExperienceTab = 'highlights' | 'all';
 
 export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps) {
   const [activeTab, setActiveTab] = useState<ExperienceTab>('highlights');
-  const isInitialRender = useIsFirstRender();
-  const tabs = useMemo(
-    () => [
-      {
-        id: 'highlights',
-        label: 'Highlights',
-        description: 'Recent roles at a glance'
-      },
-      {
-        id: 'all',
-        label: 'All Roles',
-        description: `${experience.length} positions across the career`
-      }
-    ],
-    [experience.length]
-  );
+  const tabs: { id: ExperienceTab; label: string; description: string }[] = [
+    {
+      id: 'highlights',
+      label: 'Highlights',
+      description: 'Recent roles at a glance'
+    },
+    {
+      id: 'all',
+      label: 'All Roles',
+      description: `${experience.length} positions across the career`
+    }
+  ];
 
-  const displayExperience = useMemo(
-    () => (activeTab === 'highlights' ? experience.slice(0, 2) : experience),
-    [activeTab, experience]
-  );
+  const displayExperience =
+    activeTab === 'highlights' ? experience.slice(0, 2) : experience;
   const showFullContent = activeTab === 'all';
   return (
     <div className="flex flex-col min-h-[480px] p-4 md:p-6">
@@ -63,7 +56,7 @@ export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps)
               {activeTab === tab.id && (
                 <motion.span
                   className="hidden text-[11px] text-brand/80 md:inline"
-                  initial={isInitialRender ? false : { opacity: 0, y: 4 }}
+                  initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, ease: [0.4, 0.0, 0.2, 1] }}
                 >
@@ -74,10 +67,10 @@ export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps)
           ))}
         </div>
 
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={isInitialRender ? false : { opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
