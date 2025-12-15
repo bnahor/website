@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { MOTION } from '../../utils/motion';
 import { education } from '../../data/education';
 import { Icon } from '../Icon';
@@ -7,7 +7,7 @@ interface EducationTileProps {
   isExpanded: boolean;
 }
 
-export function EducationTile({ isExpanded: _isExpanded }: EducationTileProps) {
+export function EducationTile(_props: EducationTileProps) {
   return (
     <div className="flex flex-col min-h-[400px] p-4 md:p-6">
       {/* Header */}
@@ -25,7 +25,7 @@ export function EducationTile({ isExpanded: _isExpanded }: EducationTileProps) {
         <div className="space-y-4">
           {education.map((item, index) => (
             <div key={item.school} className="space-y-2">
-              <motion.div
+              <m.div
                 custom={index}
                 initial={false}
                 animate="show"
@@ -64,7 +64,7 @@ export function EducationTile({ isExpanded: _isExpanded }: EducationTileProps) {
 
                 {/* Expanded content */}
                 {/* Removed collapsed hint; tiles are static */}
-              </motion.div>
+              </m.div>
 
               {/* Separator */}
               {index < education.length - 1 && (

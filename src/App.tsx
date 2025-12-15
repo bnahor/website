@@ -2,11 +2,13 @@ import { HeroTile } from './components/tiles/HeroTile';
 import { EducationTile } from './components/tiles/EducationTile';
 import { ExperienceTile } from './components/tiles/ExperienceTile';
 import { profile } from './data/profile';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { LoadingScreen } from './components/LoadingScreen';
-import { PlaneNoiseBackground } from './components/PlaneNoiseBackground';
 import { ProjectsTile } from './components/tiles/ProjectsTile';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
+import { LazyMotion, domAnimation } from 'framer-motion';
+
+const PlaneNoiseBackground = lazy(() => import('./components/PlaneNoiseBackground').then(module => ({ default: module.PlaneNoiseBackground })));
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -27,9 +29,13 @@ export default function App() {
   useEffect(() => {
     const finish = () => setReady(true);
     const onLoad = async () => {
-      const fonts: any = (document as any).fonts;
-      if (fonts && typeof fonts.ready?.then === 'function') {
-        try { await fonts.ready; } catch {}
+      // Wait for fonts to load if supported
+      if ('fonts' in document && document.fonts && 'ready' in document.fonts) {
+        try {
+          await document.fonts.ready;
+        } catch {
+          // Font loading failed or not supported, continue anyway
+        }
       }
       requestAnimationFrame(finish);
     };
@@ -42,14 +48,19 @@ export default function App() {
   }, []);
 
   return (
-    <div 
-      ref={containerRef as any}
-      className="text-text-primary bg-bg min-h-screen relative overflow-hidden"
-      style={{
-        transform: isPulling ? `translateY(${Math.min(pullDistance, 50)}px)` : undefined,
-        transition: isPulling ? 'none' : 'transform 0.3s ease'
-      }}
-    >
+    <LazyMotion features={domAnimation} strict>
+      <div
+        ref={(el) => {
+          if (containerRef && 'current' in containerRef) {
+            containerRef.current = el;
+          }
+        }}
+        className="text-text-primary bg-bg min-h-screen relative overflow-hidden"
+        style={{
+          transform: isPulling ? `translateY(${Math.min(pullDistance, 50)}px)` : undefined,
+          transition: isPulling ? 'none' : 'transform 0.3s ease'
+        }}
+      >
       {(isPulling || isRefreshing) && (
         <div 
           className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 bg-brand/10 backdrop-blur-sm border border-brand/20 rounded-b-lg px-4 py-2"
@@ -67,12 +78,14 @@ export default function App() {
 
       {ready && (
         <>
-            <PlaneNoiseBackground />
+            <Suspense fallback={null}>
+              <PlaneNoiseBackground />
+            </Suspense>
 
 
           <div className="relative z-10">
             <main className="container mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12">
-            
+
               <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
                 <div className="floating-content">
                   <HeroTile isExpanded={false} />
@@ -135,6 +148,7 @@ export default function App() {
       )}
 
       <LoadingScreen show={!ready} minDurationMs={250} />
-    </div>
+      </div>
+    </LazyMotion>
   );
 }

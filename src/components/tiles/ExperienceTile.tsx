@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { experience } from '../../data/experience';
 import { Icon } from '../Icon';
 import { MOTION } from '../../utils/motion';
@@ -10,7 +10,7 @@ interface ExperienceTileProps {
 
 type ExperienceTab = 'highlights' | 'all';
 
-export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps) {
+export function ExperienceTile(_props: ExperienceTileProps) {
   const [activeTab, setActiveTab] = useState<ExperienceTab>('highlights');
   const tabs: { id: ExperienceTab; label: string; description: string }[] = [
     {
@@ -40,7 +40,7 @@ export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps)
       <div className="flex-1 overflow-visible">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {tabs.map((tab) => (
-            <motion.button
+            <m.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs md:text-sm transition-colors ${
@@ -54,21 +54,21 @@ export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps)
             >
               <span>{tab.label}</span>
               {activeTab === tab.id && (
-                <motion.span
+                <m.span
                   className="hidden text-[11px] text-brand/80 md:inline"
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, ease: [0.4, 0.0, 0.2, 1] }}
                 >
                   {tab.description}
-                </motion.span>
+                </m.span>
               )}
-            </motion.button>
+            </m.button>
           ))}
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={activeTab}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps)
             className="space-y-4 py-2"
           >
             {displayExperience.map((item, index) => (
-              <motion.div
+              <m.div
                 key={`${item.company}-${item.role}`}
                 custom={index}
                 initial={false}
@@ -123,9 +123,9 @@ export function ExperienceTile({ isExpanded: _isExpanded }: ExperienceTileProps)
                       ))}
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             ))}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
     </div>

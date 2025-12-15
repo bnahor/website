@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { experience } from '../../data/experience';
 import { education } from '../../data/education';
 import { highlights } from '../../data/highlights';
@@ -124,7 +124,7 @@ export function TimelineTile({ isExpanded }: TimelineTileProps) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mx-1 md:mx-0">
                   {items.map((event, idx) => (
-                    <motion.div
+                    <m.div
                       key={`${event.type}-${event.title}-${idx}`}
                       initial={false}
                       animate={{ opacity: 1, y: 0 }}
@@ -171,7 +171,7 @@ export function TimelineTile({ isExpanded }: TimelineTileProps) {
                           </p>
                         )}
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
               </div>

@@ -16,6 +16,8 @@ export function PlaneNoiseBackground() {
   const tilesRef = useRef<HTMLElement[] | null>(null);
   const tileCentersRef = useRef<Array<{ el: HTMLElement; cx: number; cy: number }>>([]);
   const spriteRef = useRef<HTMLCanvasElement | null>(null);
+  const fpsRef = useRef<{ frames: number; lastTime: number; fps: number }>({ frames: 0, lastTime: 0, fps: 60 });
+  const frameSkipRef = useRef<number>(1);
 
   useEffect(() => {
     const rebuild = () => {
@@ -92,7 +94,26 @@ export function PlaneNoiseBackground() {
       }
       tileCentersRef.current = arr;
     };
+
+    // Initial setup
     refreshTileNodes();
+
+    // Use MutationObserver to detect when tiles are added to the DOM
+    const observer = new MutationObserver(() => {
+      const currentCount = tilesRef.current?.length || 0;
+      const newTiles = document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner');
+      if (newTiles.length !== currentCount) {
+        refreshTileNodes();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
     let scrollRaf: number | null = null;
     const onScrollOrResize = () => {
       if (scrollRaf) return;
@@ -101,10 +122,14 @@ export function PlaneNoiseBackground() {
         computeTileCenters();
       });
     };
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', () => { ensureSize(); refreshTileNodes(); }, { passive: true });
+    const scrollHandler = onScrollOrResize;
+    const resizeHandler = () => { ensureSize(); refreshTileNodes(); };
 
-    let start = performance.now();
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    window.addEventListener('resize', resizeHandler, { passive: true });
+
+    const start = performance.now();
+    let frameCount = 0;
 
     const step = (now: number) => {
       const { w, h } = dims;
@@ -112,6 +137,27 @@ export function PlaneNoiseBackground() {
         rafRef.current = requestAnimationFrame(step);
         return;
       }
+
+      // FPS tracking and adaptive frame skipping
+      frameCount++;
+      const fpsData = fpsRef.current;
+      if (now - fpsData.lastTime >= 1000) {
+        fpsData.fps = fpsData.frames;
+        fpsData.frames = 0;
+        fpsData.lastTime = now;
+        // Adjust frame skip based on FPS
+        if (fpsData.fps < 30) frameSkipRef.current = 3;
+        else if (fpsData.fps < 45) frameSkipRef.current = 2;
+        else frameSkipRef.current = 1;
+      }
+      fpsData.frames++;
+
+      // Skip frames on low-end devices
+      if (frameCount % frameSkipRef.current !== 0) {
+        rafRef.current = requestAnimationFrame(step);
+        return;
+      }
+
       const t = (now - start) / 1000;
       ctx.clearRect(0, 0, w, h);
 
@@ -145,10 +191,6 @@ export function PlaneNoiseBackground() {
         }
       }
 
-      if (!tilesRef.current || tilesRef.current.length === 0) {
-        tilesRef.current = Array.from(document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner'));
-        computeTileCenters();
-      }
       const offMax = VISUAL.CAUSTIC_OFFSET_MAX_PX;
       const scaleBase = VISUAL.CAUSTIC_SCALE_BASE;
       const scaleRange = VISUAL.CAUSTIC_SCALE_RANGE;
@@ -192,7 +234,9 @@ export function PlaneNoiseBackground() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (scrollRaf) cancelAnimationFrame(scrollRaf);
-      window.removeEventListener('scroll', onScrollOrResize as any);
+      window.removeEventListener('scroll', scrollHandler);
+      window.removeEventListener('resize', resizeHandler);
+      observer.disconnect();
     };
   }, [dims, perlin]);
 
@@ -202,7 +246,13 @@ export function PlaneNoiseBackground() {
       width={dims.w}
       height={dims.h}
       className="fixed inset-0 pointer-events-none z-0"
-      style={{ width: '100%', height: '100%', background: 'transparent' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        background: 'transparent',
+        willChange: 'transform',
+        transform: 'translateZ(0)'
+      }}
     />
   );
 }

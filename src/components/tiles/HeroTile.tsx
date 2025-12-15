@@ -1,8 +1,9 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { profile } from '../../data/profile';
 import { Icon } from '../Icon';
 import { MOTION } from '../../utils/motion';
+import { EXTERNAL } from '../../config/external';
 
 interface HeroTileProps {
   isExpanded: boolean;
@@ -30,9 +31,31 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
     setSubmitStatus(null);
 
     const formData = new FormData(e.currentTarget);
-    
+
+    const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 10000, retries = 2): Promise<Response> => {
+      for (let i = 0; i <= retries; i++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          if (i === retries) throw error;
+          // Exponential backoff: wait 1s, then 2s
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+        }
+      }
+      throw new Error('Max retries reached');
+    };
+
     try {
-      const response = await fetch('https://formspree.io/f/myzdbgal', {
+      const response = await fetchWithTimeout(EXTERNAL.FORMSPREE_ENDPOINT, {
         method: 'POST',
         body: formData,
         headers: {
@@ -90,24 +113,24 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
   return (
     <div className="flex flex-col justify-between min-h-[400px] p-4 md:p-6">
       <div className="flex-shrink-0">
-        <motion.h1 
+        <m.h1
           className="text-2xl md:text-3xl lg:text-4xl font-bold text-text-primary mb-2"
-          animate={{ 
-            fontSize: isExpanded ? '3rem' : undefined 
+          animate={{
+            fontSize: isExpanded ? '3rem' : undefined
           }}
           transition={{ duration: 0.3 }}
         >
           {profile.name}
-        </motion.h1>
-        <motion.p 
+        </m.h1>
+        <m.p
           className="text-text-muted leading-[1.75]"
-          animate={{ 
-            fontSize: isExpanded ? '1.125rem' : '1rem' 
+          animate={{
+            fontSize: isExpanded ? '1.125rem' : '1rem'
           }}
           transition={{ duration: 0.3 }}
         >
           {profile.valueProp}
-        </motion.p>
+        </m.p>
       </div>
 
       <div className="flex-1 py-6">
@@ -118,7 +141,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
               key={method.name}
               className="group"
             >
-              <motion.button
+              <m.button
                 onClick={method.action || (() => window.open(method.href, '_blank'))}
                 className="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 hover:border-white/20 backdrop-brightness-[1.05] transition-all duration-200 text-left focus-visible:ring-2 focus-visible:ring-brand outline-none"
                 whileHover={MOTION.mobileHover}
@@ -135,14 +158,14 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                     {method.name === 'Email' && copied ? 'Copied to clipboard!' : method.value}
                   </div>
                 </div>
-                <motion.span 
+                <m.span
                   className={`relative text-sm opacity-0 group-hover:opacity-100 transition-opacity ${
                     method.copyable && method.name === 'Email' && copied ? 'text-emerald-400' : 'text-brand'
                   }`}
                   whileHover={{ x: 5 }}
                 >
                   <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
+                    <m.span
                       key={method.copyable && method.name === 'Email' && copied ? 'copied' : 'default'}
                       initial={{ opacity: 0, scale: 0.8, y: 4 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -157,14 +180,14 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                       ) : (
                         <Icon name="arrowRight" size={14} />
                       )}
-                    </motion.span>
+                    </m.span>
                   </AnimatePresence>
-                </motion.span>
-              </motion.button>
+                </m.span>
+              </m.button>
               
               <AnimatePresence>
                 {method.name === 'Quick Message' && showQuickContact && (
-                  <motion.div
+                  <m.div
                     layout
                     variants={MOTION.formSlideIn}
                     initial="initial"
@@ -173,7 +196,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                     className="mt-3 p-4 bg-white/5 rounded-lg border border-white/10 will-change-transform"
                   >
                   <form onSubmit={handleQuickContactSubmit} className="space-y-3">
-                    <motion.input
+                    <m.input
                       name="name"
                       type="text"
                       placeholder="Your name"
@@ -182,7 +205,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                       whileFocus={MOTION.formField.focus}
                       initial={MOTION.formField.blur}
                     />
-                    <motion.input
+                    <m.input
                       name="email"
                       type="email"
                       placeholder="Your email"
@@ -191,7 +214,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                       whileFocus={MOTION.formField.focus}
                       initial={MOTION.formField.blur}
                     />
-                    <motion.textarea
+                    <m.textarea
                       name="message"
                       placeholder="Your message..."
                       rows={3}
@@ -200,9 +223,9 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                       whileFocus={MOTION.formField.focus}
                       initial={MOTION.formField.blur}
                     />
-                    
+
                     <div className="flex items-center gap-2">
-                      <motion.button
+                      <m.button
                         type="submit"
                         disabled={isSubmitting}
                         className="btn-primary text-sm py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-brand outline-none flex items-center gap-2"
@@ -210,16 +233,16 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                         whileTap={!isSubmitting ? MOTION.tap : {}}
                       >
                         {isSubmitting && (
-                          <motion.div
+                          <m.div
                             className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full"
                             variants={MOTION.loadingSpinner}
                             animate="animate"
                           />
                         )}
                         {isSubmitting ? 'Sending...' : 'Send Message'}
-                      </motion.button>
-                      
-                      <motion.button
+                      </m.button>
+
+                      <m.button
                         type="button"
                         onClick={() => setShowQuickContact(false)}
                         className="text-text-muted hover:text-text-primary text-sm focus-visible:ring-2 focus-visible:ring-brand outline-none rounded"
@@ -227,50 +250,50 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
                         whileTap={MOTION.tap}
                       >
                         Cancel
-                      </motion.button>
+                      </m.button>
                     </div>
 
                     <AnimatePresence>
                       {submitStatus === 'success' && (
-                        <motion.div
+                        <m.div
                           className="text-green-500 text-sm flex items-center gap-2"
                           variants={MOTION.statusMessage}
                           initial="initial"
                           animate="animate"
                           exit="exit"
                         >
-                          <motion.span
+                          <m.span
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
                           >
                             ✓
-                          </motion.span>
+                          </m.span>
                           Message sent successfully!
-                        </motion.div>
+                        </m.div>
                       )}
-                      
+
                       {submitStatus === 'error' && (
-                        <motion.div
+                        <m.div
                           className="text-red-500 text-sm flex items-center gap-2"
                           variants={MOTION.statusMessage}
                           initial="initial"
                           animate="animate"
                           exit="exit"
                         >
-                          <motion.span
+                          <m.span
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
                           >
                             ✗
-                          </motion.span>
+                          </m.span>
                           Failed to send message. Please try email instead.
-                        </motion.div>
+                        </m.div>
                       )}
                     </AnimatePresence>
                   </form>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
@@ -285,7 +308,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
 
       <div className="flex-shrink-0 pt-4">
         <div className="flex flex-col gap-3">
-          <motion.a 
+          <m.a
             href={profile.links.resume}
             download="rohan_bahl_resume.pdf"
             className="btn-primary text-sm px-6 py-3 inline-flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-brand outline-none"
@@ -294,7 +317,7 @@ export function HeroTile({ isExpanded }: HeroTileProps) {
           >
             Download Resume
             <Icon name="arrowRight" size={16} />
-          </motion.a>
+          </m.a>
         </div>
       </div>
     </div>

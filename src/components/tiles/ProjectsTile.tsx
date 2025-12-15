@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { projects } from '../../data/projects';
 import { MOTION } from '../../utils/motion';
 import { Icon } from '../Icon';
@@ -39,7 +39,7 @@ export function ProjectsTile() {
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {tabs.map((tab) => (
-          <motion.button
+          <m.button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs md:text-sm transition-colors ${
@@ -53,23 +53,23 @@ export function ProjectsTile() {
           >
             <span>{tab.label}</span>
             {activeTab === tab.id && (
-              <motion.span
+              <m.span
                 className="hidden text-[11px] text-brand/80 md:inline"
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, ease: [0.4, 0.0, 0.2, 1] }}
               >
                 {tab.description}
-              </motion.span>
+              </m.span>
             )}
-          </motion.button>
+          </m.button>
         ))}
       </div>
 
       {/* Project grid */}
       <div className="flex-1 overflow-visible">
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={activeTab}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -80,7 +80,7 @@ export function ProjectsTile() {
             {isAll ? (
               <div className="grid grid-cols-1 gap-4 pb-4 px-1">
                 {displayProjects.map((project, index) => (
-                  <motion.div
+                  <m.div
                     key={project.title}
                     custom={index}
                     initial={false}
@@ -118,7 +118,7 @@ export function ProjectsTile() {
 
                     <div className="flex gap-3 text-sm">
                       {project.href && (
-                        <motion.a
+                        <m.a
                           href={project.href}
                           className="inline-flex items-center gap-1 text-brand hover:text-brand/80 transition-colors focus-visible:ring-2 focus-visible:ring-brand outline-none rounded"
                           target="_blank"
@@ -128,15 +128,15 @@ export function ProjectsTile() {
                         >
                           View Project
                           <Icon name="arrowRight" size={14} />
-                        </motion.a>
+                        </m.a>
                       )}
                     </div>
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
             ) : (
               displayProjects.map((project, index) => (
-                <motion.div
+                <m.div
                   key={project.title}
                   custom={index}
                   initial={false}
@@ -170,7 +170,7 @@ export function ProjectsTile() {
                     </div>
                   </div>
                   {project.href && (
-                    <motion.a
+                    <m.a
                       href={project.href}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -180,12 +180,12 @@ export function ProjectsTile() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Icon name="arrowRight" size={16} />
-                    </motion.a>
+                    </m.a>
                   )}
-                </motion.div>
+                </m.div>
               ))
             )}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 
