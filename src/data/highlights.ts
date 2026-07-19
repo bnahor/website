@@ -1,34 +1,23 @@
-export type Highlight = {
-  date: string;
-  title: string;
-  note?: string;
-  href?: string;
+export type Outcome = {
+  value: string;
+  label: string;
 };
 
-export const highlights: Highlight[] = [
+export const outcomes: Outcome[] = [
   {
-    date: "2024",
-    title: "Won 2nd place, Best AI Application (ETHGlobal SF)",
-    href: "https://github.com/imjwang/storybook"
+    value: '1.5 mo',
+    label: 'of blocked R&D unblocked in three hours',
   },
   {
-    date: "2025",
-    title: "FIX Log Viewer shipped; 95% faster"
+    value: '< 1 min',
+    label: 'for four-level annotation planning',
   },
   {
-    date: "2025",
-    title: "NOC Toronto–Waterloo Programme (AY 24/25 Sem 2)"
+    value: '90%',
+    label: 'less time spent syncing camera sessions',
   },
   {
-    date: "2024",
-    title: "Built serverless telemetry + Mapbox dashboard for 20+ robot fleet"
+    value: '50+',
+    label: 'operators served by one capture timebase',
   },
-  {
-    date: "2023",
-    title: "Avionics & Rover Team, NUS SEDS"
-  },
-  {
-    date: "2022",
-    title: "Hackathon finalist for fintech innovation"
-  }
 ];

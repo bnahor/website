@@ -1,35 +1,58 @@
 export type Project = {
   title: string;
+  event: string;
+  date: string;
+  role: string;
   href?: string;
+  demoHref?: string;
   description: string;
   impact: string;
   tech: string[];
-  featured?: boolean;
 };
 
 export const projects: Project[] = [
-{
-    title: "GUI Murphy (TikTok Techjam 2025)",
-    href: "https://github.com/RB9823/techjam-2025-final",
-    description: "An automated UI inconsistencies detection / validation model w/ a user-friendly GUI",
-    impact: "Made me go insane, with sleep ramifications for the ensuing week",
-    tech: ["Python", "OpenParser"],
-    featured: true
+  {
+    title: 'StoryForge',
+    event: 'Cursor Hackathon 2025',
+    date: 'Oct–Nov 2025',
+    role: 'ML Engineer · Team Lead',
+    description:
+      'A 2D AI-powered game engine that generates coherent worlds, narrative, visuals, and dynamic character audio.',
+    impact: 'Finalist · Top 4% · 15 of 400 projects',
+    tech: ['Google Gemini', 'fal.ai', 'ElevenLabs', 'Python', 'Generative AI'],
   },
   {
-    title: "Smart Storybook (ETHGlobal SF 2024)",
-    href: "https://github.com/imjwang/storybook",
-    description: "Web3 platform enabling creators to monetize IP through NFTs; FastAPI backend integrated with Pinata IPFS",
-    impact: "Won 2nd place, Best AI Application.",
-    tech: ["FastAPI", "Pinata", "IPFS", "Python", "Web3"],
-    featured: true
+    title: 'GUI Murphy',
+    event: 'TikTok TechJam 2025',
+    date: 'Aug–Sep 2025',
+    role: 'ML Engineer · Team Lead',
+    href: 'https://github.com/bnahor/techjam-2025-final',
+    description:
+      'A multi-stage vision pipeline that identifies UI elements and detects visual inconsistencies across mobile interfaces.',
+    impact: 'Finalist · Top 4% · 12 of 300 projects',
+    tech: ['OmniParser', 'CLIP', 'Multimodal LLMs', 'Python'],
   },
   {
-    title: "sentiment. (GenAI Genesis Hackathon 2024)",
-    href: "https://github.com/RB9823/GenAI",
-    description: "Full-stack web application that analyses sentiment in text and voice notes",
-    impact: "Developed a full-stack sentiment analysis app (React/Flask) integrating OpenAI GPT-3.5 API for text/voice analysis",
-    tech: ["React", "Flask", "OpenAI API", "Python", "TypeScript"],
-    featured: true
-  }
+    title: 'Smart Storybook',
+    event: 'ETHGlobal SF 2024',
+    date: 'Oct 2024',
+    role: 'Backend Engineer',
+    href: 'https://github.com/imjwang/storybook',
+    demoHref: 'https://storybook-three-omega.vercel.app',
+    description:
+      'A Web3 publishing platform for creator-owned intellectual property, backed by FastAPI and decentralised asset storage.',
+    impact: '2nd place · Best AI Application',
+    tech: ['FastAPI', 'Pinata', 'IPFS', 'Python', 'Web3'],
+  },
+  {
+    title: 'sentiment.',
+    event: 'GenAI Genesis 2024',
+    date: 'Mar 2024',
+    role: 'Full-stack Engineer',
+    href: 'https://github.com/bnahor/GenAI',
+    description:
+      'A full-stack application for analysing sentiment in written text and voice notes.',
+    impact: 'Text and voice analysis in one workflow',
+    tech: ['React', 'Flask', 'OpenAI API', 'Python', 'TypeScript'],
+  },
 ];

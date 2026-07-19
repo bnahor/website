@@ -81,7 +81,7 @@ export function PlaneNoiseBackground() {
     if (!spriteRef.current) buildSprite();
 
     const refreshTileNodes = () => {
-      tilesRef.current = Array.from(document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner'));
+      tilesRef.current = Array.from(document.querySelectorAll<HTMLElement>('.glass-tile'));
       computeTileCenters();
     };
 
@@ -101,7 +101,7 @@ export function PlaneNoiseBackground() {
     // Use MutationObserver to detect when tiles are added to the DOM
     const observer = new MutationObserver(() => {
       const currentCount = tilesRef.current?.length || 0;
-      const newTiles = document.querySelectorAll<HTMLElement>('.glass-tile, .glass-inner');
+      const newTiles = document.querySelectorAll<HTMLElement>('.glass-tile');
       if (newTiles.length !== currentCount) {
         refreshTileNodes();
       }

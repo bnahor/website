@@ -1,133 +1,97 @@
-import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
 import { experience } from '../../data/experience';
 import { Icon } from '../Icon';
-import { MOTION } from '../../utils/motion';
 
-interface ExperienceTileProps {
-  isExpanded: boolean;
-}
-
-type ExperienceTab = 'highlights' | 'all';
-
-export function ExperienceTile(_props: ExperienceTileProps) {
-  const [activeTab, setActiveTab] = useState<ExperienceTab>('highlights');
-  const tabs: { id: ExperienceTab; label: string; description: string }[] = [
-    {
-      id: 'highlights',
-      label: 'Highlights',
-      description: 'Recent roles at a glance'
-    },
-    {
-      id: 'all',
-      label: 'All Roles',
-      description: `${experience.length} positions across the career`
-    }
-  ];
-
-  const displayExperience =
-    activeTab === 'highlights' ? experience.slice(0, 2) : experience;
-  const showFullContent = activeTab === 'all';
+export function ExperienceTile() {
   return (
-    <div className="flex flex-col min-h-[480px] p-4 md:p-6">
-      {/* Header */}
-      <div className="flex-shrink-0 mb-4">
-        <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-2">Experience</h2>
-        <p className="text-text-muted text-sm">Professional journey and key accomplishments</p>
+    <section id="experience" className="experience-section" aria-labelledby="experience-heading">
+      <div className="section-heading">
+        <div>
+          <p className="section-kicker">Experience · 2023—Present</p>
+          <h2 id="experience-heading" className="section-title">
+            Engineering impact,
+            <br />
+            in operating terms.
+          </h2>
+        </div>
+        <p className="section-description">
+          Roles where backend decisions met real operators, physical systems, and
+          production constraints.
+        </p>
       </div>
 
-      {/* Cards grid */}
-      <div className="flex-1 overflow-visible">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          {tabs.map((tab) => (
-            <m.button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs md:text-sm transition-colors ${
-                activeTab === tab.id
-                  ? 'border-brand/60 bg-brand/10 text-brand shadow-[0_1px_6px_rgba(118,208,255,0.25)]'
-                  : 'border-white/10 text-text-muted hover:border-white/20 hover:text-text-primary'
-              }`}
-              whileHover={MOTION.mobileHover}
-              whileTap={MOTION.tap}
-              aria-pressed={activeTab === tab.id}
-            >
-              <span>{tab.label}</span>
-              {activeTab === tab.id && (
-                <m.span
-                  className="hidden text-[11px] text-brand/80 md:inline"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, ease: [0.4, 0.0, 0.2, 1] }}
-                >
-                  {tab.description}
-                </m.span>
-              )}
-            </m.button>
-          ))}
-        </div>
+      <div className="experience-list">
+        {experience.map((item, index) => {
+          const visibleBulletCount = item.current ? 3 : 2;
+          const remainingBullets = item.bullets.slice(visibleBulletCount);
 
-        <AnimatePresence mode="wait">
-          <m.div
-            key={activeTab}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="space-y-4 py-2"
-          >
-            {displayExperience.map((item, index) => (
-              <m.div
-                key={`${item.company}-${item.role}`}
-                custom={index}
-                initial={false}
-                animate="show"
-                variants={MOTION.listItem}
-                whileHover={MOTION.cardHover}
-                className="group relative flex flex-col gap-2 rounded-lg border border-transparent bg-white/0 p-3 md:p-4 transition-colors duration-200 hover:border-white/15 hover:bg-white/5 backdrop-brightness-[1.05]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-text-primary text-sm md:text-base leading-snug">{item.role}</h3>
-                    <p className="text-brand text-xs md:text-sm font-medium">{item.company}</p>
-                  </div>
-                  <div className="text-xs text-text-muted whitespace-nowrap flex items-center gap-1 leading-none">
-                    <Icon name="calendar" size={12} /> {item.start} – {item.end}
-                  </div>
+          return (
+            <article
+              key={`${item.company}-${item.role}`}
+              className={`experience-card glass-tile ${item.current ? 'experience-card--current' : ''}`}
+            >
+              <div className="experience-meta">
+                <div className="experience-index" aria-hidden="true">
+                  /0{index + 1}
+                </div>
+                <div>
+                  <p className="experience-company">
+                    {item.company}
+                    {item.current && <span className="current-pill">Current</span>}
+                  </p>
+                  <h3>{item.role}</h3>
+                </div>
+                <div className="experience-dates">
+                  <span>
+                    <Icon name="calendar" size={13} />
+                    {item.start} — {item.end}
+                  </span>
+                  <span>
+                    <Icon name="location" size={13} />
+                    {item.location}
+                  </span>
+                </div>
+              </div>
+
+              <div className="experience-body">
+                <p className="experience-summary">{item.summary}</p>
+
+                <div className="metric-row" aria-label="Role highlights">
+                  {item.metrics.map((metric) => (
+                    <span key={metric}>{metric}</span>
+                  ))}
                 </div>
 
-                {item.bullets?.length > 0 && (
-                  <ul className="text-sm text-text-muted space-y-1.5 leading-relaxed list-none m-0">
-                    {item.bullets
-                      .slice(0, showFullContent ? item.bullets.length : 2)
-                      .map((b, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-brand mt-1 flex-shrink-0">•</span>
-                          <span>{b}</span>
-                        </li>
+                <ul className="impact-list">
+                  {item.bullets.slice(0, visibleBulletCount).map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+
+                {remainingBullets.length > 0 && (
+                  <details className="experience-more">
+                    <summary>
+                      {remainingBullets.length} more{' '}
+                      {remainingBullets.length === 1 ? 'outcome' : 'outcomes'}
+                      <Icon name="arrowDown" size={14} />
+                    </summary>
+                    <ul className="impact-list impact-list--additional">
+                      {remainingBullets.map((bullet) => (
+                        <li key={bullet}>{bullet}</li>
                       ))}
-                  </ul>
+                    </ul>
+                  </details>
                 )}
 
-                {item.tech?.length > 0 && (
-                  <div className="mt-auto pt-1 flex flex-wrap gap-1.5">
-                    {item.tech
-                      .slice(0, showFullContent ? item.tech.length : 4)
-                      .map((t) => (
-                        <span
-                          key={t}
-                          className="px-2 py-0.5 bg-brand/10 text-brand text-xs rounded transition-transform shadow-[0_1px_6px_rgba(118,208,255,0.25)] group-hover:-translate-y-px"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                  </div>
-                )}
-              </m.div>
-            ))}
-          </m.div>
-        </AnimatePresence>
+                <div className="tech-list" aria-label="Technologies used">
+                  {item.tech.map((technology) => (
+                    <span key={technology}>{technology}</span>
+                  ))}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 }
