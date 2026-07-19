@@ -3,11 +3,9 @@ import { Icon } from '../Icon';
 
 export function EducationTile() {
   return (
-    <section id="about" className="education-tile glass-tile" aria-labelledby="education-heading">
-      <p className="section-kicker">Education</p>
-      <h2 id="education-heading" className="section-title section-title--compact">
-        A foundation in systems and intelligent software.
-      </h2>
+    <section id="about" className="education-tile" aria-labelledby="education-heading">
+      <p className="section-kicker">Background</p>
+      <h2 id="education-heading" className="section-title section-title--compact">Education</h2>
 
       <div className="education-list">
         {education.map((item, index) => (
@@ -26,7 +24,7 @@ export function EducationTile() {
             </div>
             <span className="education-date">
               <Icon name="calendar" size={13} />
-              {item.start} — {item.end}
+              {item.start} – {item.end}
             </span>
           </article>
         ))}

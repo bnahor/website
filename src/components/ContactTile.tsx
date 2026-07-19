@@ -17,14 +17,12 @@ export function ContactTile() {
   };
 
   return (
-    <section id="contact" className="contact-tile glass-tile" aria-labelledby="contact-heading">
-      <p className="section-kicker">Contact</p>
-      <h2 id="contact-heading" className="section-title section-title--compact">
-        Let&apos;s compare notes.
-      </h2>
+    <section id="contact" className="contact-tile" aria-labelledby="contact-heading">
+      <p className="section-kicker">Say hello</p>
+      <h2 id="contact-heading" className="section-title section-title--compact">Contact</h2>
       <p className="contact-copy">
-        The best way to reach me is by email. I&apos;m always interested in thoughtful
-        conversations about product-minded engineering and difficult systems.
+        Email is best. I&apos;m happy to talk about robotics, capture systems, or a
+        difficult engineering problem you&apos;re trying to untangle.
       </p>
 
       <div className="contact-actions">

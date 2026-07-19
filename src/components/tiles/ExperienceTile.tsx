@@ -6,54 +6,59 @@ export function ExperienceTile() {
     <section id="experience" className="experience-section" aria-labelledby="experience-heading">
       <div className="section-heading">
         <div>
-          <p className="section-kicker">Experience · 2023—Present</p>
-          <h2 id="experience-heading" className="section-title">
-            Engineering impact,
-            <br />
-            in operating terms.
-          </h2>
+          <p className="section-kicker">Work log · 2023–Present</p>
+          <h2 id="experience-heading" className="section-title">Experience</h2>
         </div>
         <p className="section-description">
-          Roles where backend decisions met real operators, physical systems, and
-          production constraints.
+          The systems I shipped, what broke, and the measurable result.
         </p>
       </div>
 
-      <div className="experience-list">
+      <div className="experience-console">
+        <div className="log-header" aria-hidden="true">
+          <span>TIME AXIS</span>
+          <span>ENTRY</span>
+          <span>FIELD NOTES</span>
+        </div>
         {experience.map((item, index) => {
-          const visibleBulletCount = item.current ? 3 : 2;
+          const visibleBulletCount = item.current ? 2 : index === 1 ? 2 : 1;
           const remainingBullets = item.bullets.slice(visibleBulletCount);
 
           return (
             <article
               key={`${item.company}-${item.role}`}
-              className={`experience-card glass-tile ${item.current ? 'experience-card--current' : ''}`}
+              className={`log-entry ${item.current ? 'log-entry--current' : ''}`}
             >
-              <div className="experience-meta">
-                <div className="experience-index" aria-hidden="true">
-                  /0{index + 1}
+              <div className="log-time">
+                <span className="log-node" aria-hidden="true" />
+                <time>{item.start}</time>
+                <span>{item.end}</span>
+              </div>
+
+              <div className="log-identity">
+                <div className="log-index" aria-hidden="true">
+                  LOG {String(index + 1).padStart(2, '0')}
                 </div>
-                <div>
-                  <p className="experience-company">
-                    {item.company}
-                    {item.current && <span className="current-pill">Current</span>}
-                  </p>
-                  <h3>{item.role}</h3>
-                </div>
-                <div className="experience-dates">
-                  <span>
-                    <Icon name="calendar" size={13} />
-                    {item.start} — {item.end}
-                  </span>
-                  <span>
-                    <Icon name="location" size={13} />
-                    {item.location}
-                  </span>
+                <p className="experience-company">
+                  {item.company}
+                  {item.current && <span className="current-pill">Recording</span>}
+                </p>
+                <h3>{item.role}</h3>
+                <div className="experience-location">
+                  <Icon name="location" size={13} />
+                  {item.location}
                 </div>
               </div>
 
-              <div className="experience-body">
+              <div className="log-notes">
                 <p className="experience-summary">{item.summary}</p>
+
+                {item.story && (
+                  <blockquote className="incident-story">
+                    <span>INCIDENT / RECOVERY</span>
+                    {item.story}
+                  </blockquote>
+                )}
 
                 <div className="metric-row" aria-label="Role highlights">
                   {item.metrics.map((metric) => (
@@ -70,8 +75,7 @@ export function ExperienceTile() {
                 {remainingBullets.length > 0 && (
                   <details className="experience-more">
                     <summary>
-                      {remainingBullets.length} more{' '}
-                      {remainingBullets.length === 1 ? 'outcome' : 'outcomes'}
+                      Open full log ({remainingBullets.length})
                       <Icon name="arrowDown" size={14} />
                     </summary>
                     <ul className="impact-list impact-list--additional">
@@ -82,7 +86,7 @@ export function ExperienceTile() {
                   </details>
                 )}
 
-                <div className="tech-list" aria-label="Technologies used">
+                <div className="tech-list tech-list--dark" aria-label="Technologies used">
                   {item.tech.map((technology) => (
                     <span key={technology}>{technology}</span>
                   ))}

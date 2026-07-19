@@ -13,7 +13,7 @@ export function SiteHeader() {
     <header className="site-header">
       <a className="wordmark" href="#top" aria-label="Rohan Bahl, back to top">
         <span className="wordmark-mark" aria-hidden="true">
-          RB
+          <i />
         </span>
         <span className="wordmark-name">Rohan Bahl</span>
       </a>

@@ -17,7 +17,7 @@ export const projects: Project[] = [
     date: 'Oct–Nov 2025',
     role: 'ML Engineer · Team Lead',
     description:
-      'A 2D AI-powered game engine that generates coherent worlds, narrative, visuals, and dynamic character audio.',
+      'A 2D game engine that turns one prompt into a playable world, with generated scenes, dialogue, art, and character audio.',
     impact: 'Finalist · Top 4% · 15 of 400 projects',
     tech: ['Google Gemini', 'fal.ai', 'ElevenLabs', 'Python', 'Generative AI'],
   },
@@ -28,7 +28,7 @@ export const projects: Project[] = [
     role: 'ML Engineer · Team Lead',
     href: 'https://github.com/bnahor/techjam-2025-final',
     description:
-      'A multi-stage vision pipeline that identifies UI elements and detects visual inconsistencies across mobile interfaces.',
+      'A vision pipeline that maps interface elements and flags visual inconsistencies in mobile screens.',
     impact: 'Finalist · Top 4% · 12 of 300 projects',
     tech: ['OmniParser', 'CLIP', 'Multimodal LLMs', 'Python'],
   },
@@ -40,7 +40,7 @@ export const projects: Project[] = [
     href: 'https://github.com/imjwang/storybook',
     demoHref: 'https://storybook-three-omega.vercel.app',
     description:
-      'A Web3 publishing platform for creator-owned intellectual property, backed by FastAPI and decentralised asset storage.',
+      'A publishing tool for creator-owned stories, backed by FastAPI and decentralised asset storage.',
     impact: '2nd place · Best AI Application',
     tech: ['FastAPI', 'Pinata', 'IPFS', 'Python', 'Web3'],
   },

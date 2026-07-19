@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react';
 import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion';
 import { ContactTile } from './components/ContactTile';
 import { OutcomeRail } from './components/OutcomeRail';
@@ -9,12 +8,6 @@ import { HeroTile } from './components/tiles/HeroTile';
 import { ProjectsTile } from './components/tiles/ProjectsTile';
 import { profile } from './data/profile';
 
-const PlaneNoiseBackground = lazy(() =>
-  import('./components/PlaneNoiseBackground').then((module) => ({
-    default: module.PlaneNoiseBackground,
-  })),
-);
-
 export default function App() {
   return (
     <LazyMotion features={domAnimation} strict>
@@ -24,11 +17,7 @@ export default function App() {
             Skip to content
           </a>
 
-          <div className="ambient-glow ambient-glow--one" aria-hidden="true" />
-          <div className="ambient-glow ambient-glow--two" aria-hidden="true" />
-          <Suspense fallback={null}>
-            <PlaneNoiseBackground />
-          </Suspense>
+          <div className="time-grid" aria-hidden="true" />
 
           <SiteHeader />
 
