@@ -11,6 +11,8 @@ export const profile = {
   links: {
     github: 'https://github.com/bnahor',
     linkedin: 'https://www.linkedin.com/in/rohan-bahl',
+    instagram: 'https://www.instagram.com/ubcebicib',
+    x: 'https://x.com/rb_9823',
     resume: publicAsset('rohan-bahl-resume.pdf'),
   },
 } as const;

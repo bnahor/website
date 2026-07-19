@@ -24,6 +24,10 @@ export function ContactTile() {
         Email is best. I&apos;m happy to talk about robotics, capture systems, or a
         difficult engineering problem you&apos;re trying to untangle.
       </p>
+      <p className="contact-status">
+        <i aria-hidden="true" />
+        Online · Singapore
+      </p>
 
       <div className="contact-actions">
         <a className="primary-action" href={`mailto:${profile.email}`}>
@@ -50,6 +54,12 @@ export function ContactTile() {
         </a>
         <a href={profile.links.linkedin} target="_blank" rel="noreferrer">
           LinkedIn <Icon name="arrowRight" size={13} />
+        </a>
+        <a href={profile.links.x} target="_blank" rel="noreferrer">
+          X <Icon name="arrowRight" size={13} />
+        </a>
+        <a href={profile.links.instagram} target="_blank" rel="noreferrer">
+          Instagram <Icon name="arrowRight" size={13} />
         </a>
         <a href={profile.links.resume} target="_blank" rel="noreferrer">
           Résumé <Icon name="arrowRight" size={13} />
